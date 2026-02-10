@@ -85,7 +85,7 @@ useHead({
 }
 
 .hero-logo {
-  max-width: 200px;
+  max-width: 300px;
   height: auto;
   margin: 0 auto 2rem;
   display: block;
