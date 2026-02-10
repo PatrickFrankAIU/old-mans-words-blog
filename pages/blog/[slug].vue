@@ -109,6 +109,10 @@ function formatDate(dateString: string): string {
       </div>
 
       <footer class="post-footer">
+        <div class="post-boilerplate">
+          <img src="/images/oldmannotext.png" alt="Old Man" class="boilerplate-image" />
+          <p class="boilerplate-text">These are an old man's words. I wouldn't take them too seriously, but what do I know.</p>
+        </div>
         <NuxtLink to="/" class="back-link">← Back to posts</NuxtLink>
       </footer>
     </article>
@@ -245,6 +249,27 @@ function formatDate(dateString: string): string {
   margin-top: 4rem;
   padding-top: 2rem;
   border-top: 1px solid var(--color-border);
+}
+
+.post-boilerplate {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.boilerplate-image {
+  max-width: 200px;
+  height: auto;
+  margin: 0 auto 1.5rem;
+  opacity: 0.9;
+}
+
+.boilerplate-text {
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 @media (max-width: 640px) {

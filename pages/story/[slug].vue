@@ -127,6 +127,10 @@ onMounted(() => {
 
       <!-- Footer -->
       <footer class="story-footer">
+        <div class="story-boilerplate">
+          <img src="/images/oldmannotext.png" alt="Old Man" class="boilerplate-image" />
+          <p class="boilerplate-text">These are an old man's words. I wouldn't take them too seriously, but what do I know.</p>
+        </div>
         <NuxtLink to="/" class="story-back-link">&larr; Back to blog</NuxtLink>
       </footer>
     </template>
@@ -342,6 +346,27 @@ onMounted(() => {
   text-align: center;
   padding: 4rem 2rem 6rem;
   border-top: 1px solid var(--color-border, #2a2a40);
+}
+
+.story-boilerplate {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.boilerplate-image {
+  max-width: 200px;
+  height: auto;
+  margin: 0 auto 1.5rem;
+  opacity: 0.9;
+}
+
+.boilerplate-text {
+  color: var(--color-text-muted, #8888a0);
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 /* Mobile: disable fixed attachment (iOS/Android don't support it well) */
