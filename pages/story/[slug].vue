@@ -109,24 +109,11 @@ onMounted(() => {
         <div
           v-if="section.type === 'parallax'"
           class="story-parallax"
-          :class="{ 'story-parallax-mobile': true }"
+          :style="{ backgroundImage: `url(${section.imageSrc})` }"
+          role="img"
+          :aria-label="section.imageAlt || 'Story image'"
         >
-          <!-- Desktop: CSS background with fixed attachment -->
-          <div
-            class="story-parallax-bg"
-            :style="{ backgroundImage: `url(${section.imageSrc})` }"
-            role="img"
-            :aria-label="section.imageAlt || 'Story image'"
-          >
-            <div class="story-parallax-overlay" />
-          </div>
-          <!-- Mobile: <img> element for better support -->
-          <img
-            :src="section.imageSrc"
-            :alt="section.imageAlt || 'Story image'"
-            class="story-parallax-img"
-            loading="lazy"
-          />
+          <div class="story-parallax-overlay" />
         </div>
 
         <!-- Text section -->
@@ -268,13 +255,6 @@ onMounted(() => {
 .story-parallax {
   position: relative;
   min-height: 100vh;
-  overflow: hidden;
-}
-
-/* Desktop: CSS background with fixed attachment */
-.story-parallax-bg {
-  position: absolute;
-  inset: 0;
   background-attachment: fixed;
   background-position: center;
   background-size: cover;
@@ -285,16 +265,6 @@ onMounted(() => {
   position: absolute;
   inset: 0;
   background: rgba(10, 10, 15, 0.35);
-  z-index: 1;
-}
-
-/* Mobile: <img> element (hidden on desktop) */
-.story-parallax-img {
-  display: none;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
 }
 
 /* Text section */
@@ -374,25 +344,11 @@ onMounted(() => {
   border-top: 1px solid var(--color-border, #2a2a40);
 }
 
-/* Mobile: use <img> instead of fixed background */
+/* Mobile: disable fixed attachment (iOS/Android don't support it well) */
 @media (max-width: 768px) {
   .story-parallax {
-    min-height: 70vh;
-  }
-
-  /* Hide CSS background on mobile */
-  .story-parallax-bg {
-    display: none;
-  }
-
-  /* Show <img> on mobile */
-  .story-parallax-img {
-    display: block;
-  }
-
-  /* Overlay stays above the image */
-  .story-parallax-overlay {
-    z-index: 1;
+    background-attachment: scroll;
+    min-height: 60vh;
   }
 
   .story-text {
@@ -400,10 +356,9 @@ onMounted(() => {
   }
 
   .story-text-over-image {
-    margin-top: -15vh;
+    margin-top: -10vh;
     padding-top: 4rem;
     padding-bottom: 4rem;
-    z-index: 2;
   }
 
   .story-hero {
