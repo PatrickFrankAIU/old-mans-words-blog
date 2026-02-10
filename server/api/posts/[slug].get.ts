@@ -60,18 +60,15 @@ export default defineEventHandler(async (event): Promise<BlogPost> => {
     const date = new Date(dateValue).toISOString()
     const tags = props.Tags?.multi_select?.map((tag) => tag.name) || []
     const published = props.Published?.checkbox || false
+    const layout = (props.Layout?.select?.name || 'standard').toLowerCase()
 
     // Fetch page blocks (content)
     const blocksResponse = await notion.blocks.children.list({
       block_id: matchedPage.id,
     })
 
-    // Transform Notion blocks to HTML
-    let content = await transformBlocksToHtml(blocksResponse.results)
-    // Group consecutive list items into proper ul/ol tags
-    content = groupListItems(content)
-
-    return {
+    // Build the post object
+    const post: BlogPost = {
       id: matchedPage.id,
       title,
       slug: finalSlug,
@@ -79,8 +76,20 @@ export default defineEventHandler(async (event): Promise<BlogPost> => {
       date,
       tags,
       published,
-      content,
+      layout,
     }
+
+    if (layout === 'story') {
+      // Section-based transform for scrollytelling
+      post.sections = await transformBlocksToSections(blocksResponse.results)
+    } else {
+      // Standard HTML transform
+      let content = await transformBlocksToHtml(blocksResponse.results)
+      content = groupListItems(content)
+      post.content = content
+    }
+
+    return post
   } catch (error: any) {
     // Re-throw createError errors as-is
     if (error.statusCode) {

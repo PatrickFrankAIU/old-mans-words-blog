@@ -55,7 +55,8 @@ nuxt-test/
 ├── layouts/                  # default.vue
 ├── pages/
 │   ├── index.vue             # Post list
-│   └── blog/[slug].vue       # Single post
+│   ├── blog/[slug].vue       # Single post (standard layout)
+│   └── story/[slug].vue      # Single post (scrollytelling layout)
 ├── server/
 │   ├── api/
 │   │   ├── posts.get.ts      # List posts
@@ -79,8 +80,18 @@ nuxt-test/
 | Date        | date          | No       | Publication date; falls back to created_time |
 | Tags        | multi_select  | No       | Flat taxonomy                            |
 | Description | rich_text     | No       | Excerpt / SEO meta description           |
+| Layout      | select        | No       | `standard` (default) or `story` — controls rendering route |
 
 Page body content = Notion blocks within the page (fetched via Blocks API).
+
+## Layout System
+
+Posts support two rendering layouts controlled by the Notion `Layout` property:
+
+- **standard** (default): Rendered at `/blog/[slug]` using the normal blog layout with header, content, footer.
+- **story**: Rendered at `/story/[slug]` using a NYT-style scrollytelling layout. Images become full-viewport parallax backgrounds, text scrolls over them with a dark overlay. The `pages/story/[slug].vue` page uses `layout: false` for a full-viewport immersive experience.
+
+The `transformBlocksToSections()` function in `transform.ts` splits Notion blocks into `ContentSection[]` (text/parallax) for the story layout, while `transformBlocksToHtml()` continues to produce a single HTML string for standard posts.
 
 ## Key Conventions
 

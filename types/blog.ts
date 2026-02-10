@@ -13,7 +13,19 @@ export interface BlogPost {
   date: string // ISO 8601 date string
   tags: string[]
   published: boolean
+  layout?: string // 'standard' | 'story' — controls which route renders the post
   content?: string // HTML content (only included in single post view)
+  sections?: ContentSection[] // Section-based content for story layout
+}
+
+/**
+ * Content section for scrollytelling (story layout)
+ */
+export interface ContentSection {
+  type: 'text' | 'parallax'
+  html?: string       // for text sections: rendered HTML of consecutive non-image blocks
+  imageSrc?: string   // for parallax sections: local image path
+  imageAlt?: string   // for parallax sections: image alt text
 }
 
 /**
@@ -43,6 +55,10 @@ export interface NotionPageProperties {
   Description?: {
     type: 'rich_text'
     rich_text: Array<{ plain_text: string }>
+  }
+  Layout?: {
+    type: 'select'
+    select: { name: string } | null
   }
 }
 

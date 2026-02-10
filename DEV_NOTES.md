@@ -65,6 +65,30 @@ Running log of architectural decisions, tradeoffs, and future considerations.
 
 ---
 
+## 2026-02-10 — Scrollytelling Layout
+
+### Decision: Section-based transform for story layout
+
+**Context**: Narrative posts ("Cargo Bay 12") benefit from immersive scrollytelling where images become full-viewport parallax backgrounds. The standard `transformBlocksToHtml()` produces a single HTML string, which doesn't support this rendering model.
+
+**Chosen**: Add `transformBlocksToSections()` alongside the existing transform, returning `ContentSection[]` where each section is either `text` (accumulated non-image blocks as HTML) or `parallax` (a single image). The story page renders these sections as alternating parallax panels and text blocks.
+
+**Rationale**: Keeps the existing standard transform untouched. The section-based approach maps naturally to the scrollytelling UI pattern. The Notion `Layout` property allows per-post opt-in, and the API route conditionally calls the appropriate transform.
+
+**Revisit if**: More layout types are needed — could evolve into a strategy pattern.
+
+---
+
+### Decision: Layout property in Notion (select)
+
+**Context**: Need a way to control whether a post renders as standard blog or immersive story.
+
+**Chosen**: Notion `Layout` select property with options `standard` and `story`. Defaults to `standard` if not set.
+
+**Rationale**: Simple, author-friendly. Select type is easy to use in Notion and filter on. No code changes needed to add new layout options in the future — just add a select option and a corresponding page template.
+
+---
+
 ## Implementation Plan
 
 The project is built in six sequential phases, each with clear deliverables and dependencies.

@@ -2,6 +2,7 @@ import { createHash } from 'crypto'
 import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import { join } from 'path'
+import type { ContentSection } from '~/types/blog'
 
 /**
  * Transform Notion blocks to HTML
@@ -316,4 +317,70 @@ export function groupListItems(html: string): string {
   )
 
   return html
+}
+
+/**
+ * Transform Notion blocks into content sections for scrollytelling layout.
+ * Splits blocks into text and parallax sections based on image boundaries.
+ */
+export async function transformBlocksToSections(blocks: any[]): Promise<ContentSection[]> {
+  const sections: ContentSection[] = []
+  let pendingHtmlParts: string[] = []
+
+  const flushText = () => {
+    if (pendingHtmlParts.length === 0) return
+    let html = pendingHtmlParts.join('\n')
+    html = groupListItems(html)
+    sections.push({ type: 'text', html })
+    pendingHtmlParts = []
+  }
+
+  for (const block of blocks) {
+    if (block.type === 'image') {
+      // Flush accumulated text before the image
+      flushText()
+
+      // Extract image info and emit a parallax section
+      const info = await extractImageInfo(block)
+      if (info) {
+        sections.push({
+          type: 'parallax',
+          imageSrc: info.src,
+          imageAlt: info.alt,
+        })
+      }
+    } else {
+      // Accumulate non-image blocks as HTML
+      const html = await transformBlock(block)
+      if (html) {
+        pendingHtmlParts.push(html)
+      }
+    }
+  }
+
+  // Flush any remaining text
+  flushText()
+
+  return sections
+}
+
+/**
+ * Extract image source and alt from an image block (downloads the image).
+ */
+async function extractImageInfo(block: any): Promise<{ src: string; alt: string } | null> {
+  const image = block.image
+  let imageUrl: string
+
+  if (image.type === 'external') {
+    imageUrl = image.external.url
+  } else if (image.type === 'file') {
+    imageUrl = image.file.url
+  } else {
+    return null
+  }
+
+  const src = await downloadImage(imageUrl)
+  const alt = image.caption?.map((rt: any) => rt.plain_text).join('') || ''
+
+  return { src, alt }
 }

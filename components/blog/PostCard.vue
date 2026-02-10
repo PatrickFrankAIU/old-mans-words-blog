@@ -20,7 +20,7 @@ function formatDate(dateString: string): string {
 
 <template>
   <article class="post-card">
-    <NuxtLink :to="`/blog/${post.slug}`" class="post-card-link">
+    <NuxtLink :to="post.layout === 'story' ? `/story/${post.slug}` : `/blog/${post.slug}`" class="post-card-link">
       <h2 class="post-card-title">{{ post.title }}</h2>
 
       <div class="post-card-meta">

@@ -43,6 +43,16 @@
 - Updated `server/api/posts/[slug].get.ts` to transform Notion blocks to HTML instead of returning raw JSON.
 - Tested transformer with existing Notion posts - working correctly.
 
+## 2026-02-10 — Scrollytelling Story Layout
+
+- Added NYT-style scrollytelling layout for narrative posts via `/story/[slug]` route.
+- New Notion `Layout` select property (`standard` / `story`) controls which route renders a post.
+- Added `transformBlocksToSections()` in `transform.ts` — splits blocks into text and parallax sections at image boundaries.
+- Created `pages/story/[slug].vue` with full-viewport parallax images, dark overlay text, IntersectionObserver fade-in, fixed nav bar, and mobile fallback.
+- Updated `PostCard.vue` to route to `/story/` or `/blog/` based on post layout.
+- Added `ContentSection` interface and `layout` field to `BlogPost` type.
+- Updated `posts/[slug].get.ts` to return sections array for story layout posts.
+
 ## 2026-02-10 — Phase 4: Pages & UI Complete
 
 - Created `composables/usePosts.ts` for fetching posts from API routes.

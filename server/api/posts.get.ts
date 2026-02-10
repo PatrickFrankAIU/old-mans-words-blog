@@ -51,6 +51,9 @@ export default defineEventHandler(async (event): Promise<BlogPost[]> => {
       // Published flag
       const published = props.Published?.checkbox || false
 
+      // Layout (standard or story) — normalize to lowercase
+      const layout = (props.Layout?.select?.name || 'standard').toLowerCase()
+
       return {
         id: page.id,
         title,
@@ -59,6 +62,7 @@ export default defineEventHandler(async (event): Promise<BlogPost[]> => {
         date,
         tags,
         published,
+        layout,
       }
     })
 
