@@ -14,6 +14,7 @@ export interface BlogPost {
   tags: string[]
   published: boolean
   layout?: string // 'standard' | 'story' — controls which route renders the post
+  cardImage?: string // local image path for card thumbnail (auto-extracted from first image)
   content?: string // HTML content (only included in single post view)
   sections?: ContentSection[] // Section-based content for story layout
 }

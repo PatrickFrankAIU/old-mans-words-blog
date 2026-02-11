@@ -1,4 +1,5 @@
 import type { BlogPost, NotionPageProperties } from '~/types/blog'
+import { extractFirstImageUrl } from '~/server/utils/transform'
 
 /**
  * GET /api/posts
@@ -66,7 +67,23 @@ export default defineEventHandler(async (event): Promise<BlogPost[]> => {
       }
     })
 
-    return posts
+    // Fetch first image from each post's blocks for card thumbnails
+    const postsWithImages = await Promise.all(
+      posts.map(async (post) => {
+        try {
+          const blocksResponse = await notion.blocks.children.list({
+            block_id: post.id,
+          })
+          const cardImage = await extractFirstImageUrl(blocksResponse.results)
+          return { ...post, ...(cardImage && { cardImage }) }
+        } catch (error) {
+          console.warn(`Failed to fetch card image for "${post.title}":`, error)
+          return post
+        }
+      })
+    )
+
+    return postsWithImages
   } catch (error: any) {
     console.error('Error fetching posts from Notion:', error)
 

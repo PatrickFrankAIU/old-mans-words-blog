@@ -246,6 +246,31 @@ async function downloadImage(url: string): Promise<string> {
 }
 
 /**
+ * Extract the first image from a list of Notion blocks.
+ * Downloads it via downloadImage() and returns the local path, or null if no images found.
+ */
+export async function extractFirstImageUrl(blocks: any[]): Promise<string | null> {
+  for (const block of blocks) {
+    if (block.type !== 'image') continue
+
+    const image = block.image
+    let imageUrl: string
+
+    if (image.type === 'external') {
+      imageUrl = image.external.url
+    } else if (image.type === 'file') {
+      imageUrl = image.file.url
+    } else {
+      continue
+    }
+
+    return await downloadImage(imageUrl)
+  }
+
+  return null
+}
+
+/**
  * Transform rich text array to HTML
  * Handles bold, italic, strikethrough, code, links, etc.
  */

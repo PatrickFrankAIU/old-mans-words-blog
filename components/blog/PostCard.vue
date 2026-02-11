@@ -19,31 +19,38 @@ function formatDate(dateString: string): string {
 </script>
 
 <template>
-  <article class="post-card">
+  <article :class="['post-card', { 'has-hero': post.cardImage }]">
     <NuxtLink :to="post.layout === 'story' ? `/story/${post.slug}` : `/blog/${post.slug}`" class="post-card-link">
-      <h2 class="post-card-title">{{ post.title }}</h2>
-
-      <div class="post-card-meta">
-        <time :datetime="post.date" class="post-card-date">
-          {{ formatDate(post.date) }}
-        </time>
-
-        <div v-if="post.tags.length > 0" class="post-card-tags">
-          <span
-            v-for="tag in post.tags"
-            :key="tag"
-            class="post-card-tag"
-          >
-            {{ tag }}
-          </span>
-        </div>
+      <div v-if="post.cardImage" class="post-card-hero">
+        <img :src="post.cardImage" :alt="post.title" loading="lazy" />
+        <h2 class="post-card-hero-title">{{ post.title }}</h2>
       </div>
 
-      <p v-if="post.description" class="post-card-description">
-        {{ post.description }}
-      </p>
+      <div class="post-card-body">
+        <h2 v-if="!post.cardImage" class="post-card-title">{{ post.title }}</h2>
 
-      <span class="post-card-read-more">Read more →</span>
+        <div class="post-card-meta">
+          <time :datetime="post.date" class="post-card-date">
+            {{ formatDate(post.date) }}
+          </time>
+
+          <div v-if="post.tags.length > 0" class="post-card-tags">
+            <span
+              v-for="tag in post.tags"
+              :key="tag"
+              class="post-card-tag"
+            >
+              {{ tag }}
+            </span>
+          </div>
+        </div>
+
+        <p v-if="post.description" class="post-card-description">
+          {{ post.description }}
+        </p>
+
+        <span class="post-card-read-more">Read more →</span>
+      </div>
     </NuxtLink>
   </article>
 </template>
@@ -53,8 +60,12 @@ function formatDate(dateString: string): string {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  padding: 2rem;
+  overflow: hidden;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post-card:not(.has-hero) {
+  padding: 2rem;
 }
 
 .post-card:hover {
@@ -67,6 +78,55 @@ function formatDate(dateString: string): string {
   text-decoration: none;
   color: inherit;
   display: block;
+}
+
+/* Hero image area */
+.post-card-hero {
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+}
+
+.post-card-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.post-card-hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(to bottom, transparent, var(--color-bg-card));
+  pointer-events: none;
+}
+
+.post-card-hero-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 1.25rem 0.5rem;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  z-index: 1;
+}
+
+/* Card body (text content below hero or full card when no hero) */
+.post-card-body {
+  padding: 1.25rem;
+}
+
+.post-card:not(.has-hero) .post-card-body {
+  padding: 0;
 }
 
 .post-card-title {
@@ -82,7 +142,7 @@ function formatDate(dateString: string): string {
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   font-size: 0.875rem;
   color: var(--color-text-muted);
 }
@@ -110,7 +170,7 @@ function formatDate(dateString: string): string {
 .post-card-description {
   color: var(--color-text-muted);
   line-height: 1.6;
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.75rem 0;
 }
 
 .post-card-read-more {
