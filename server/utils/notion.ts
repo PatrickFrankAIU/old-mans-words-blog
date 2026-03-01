@@ -27,6 +27,26 @@ export function getNotionClient(): Client {
 }
 
 /**
+ * Fetch all blocks for a page, handling Notion's 100-block pagination limit.
+ */
+export async function fetchAllBlocks(blockId: string): Promise<any[]> {
+  const notion = getNotionClient()
+  const allBlocks: any[] = []
+  let cursor: string | undefined = undefined
+
+  do {
+    const response = await notion.blocks.children.list({
+      block_id: blockId,
+      ...(cursor && { start_cursor: cursor }),
+    })
+    allBlocks.push(...response.results)
+    cursor = response.has_more ? (response.next_cursor ?? undefined) : undefined
+  } while (cursor)
+
+  return allBlocks
+}
+
+/**
  * Get the configured Notion database ID
  */
 export function getNotionDatabaseId(): string {

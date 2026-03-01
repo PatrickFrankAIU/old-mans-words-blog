@@ -71,10 +71,8 @@ export default defineEventHandler(async (event): Promise<BlogPost[]> => {
     const postsWithImages = await Promise.all(
       posts.map(async (post) => {
         try {
-          const blocksResponse = await notion.blocks.children.list({
-            block_id: post.id,
-          })
-          const cardImage = await extractFirstImageUrl(blocksResponse.results)
+          const allBlocks = await fetchAllBlocks(post.id)
+          const cardImage = await extractFirstImageUrl(allBlocks)
           return { ...post, ...(cardImage && { cardImage }) }
         } catch (error) {
           console.warn(`Failed to fetch card image for "${post.title}":`, error)

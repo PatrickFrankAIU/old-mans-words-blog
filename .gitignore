@@ -38,3 +38,4 @@ Thumbs.db
 # Downloaded images (optional - comment out if you want to commit them)
 # public/images/blog/*
 # !public/images/blog/.gitkeep
+.vercel

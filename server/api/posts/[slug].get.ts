@@ -62,10 +62,8 @@ export default defineEventHandler(async (event): Promise<BlogPost> => {
     const published = props.Published?.checkbox || false
     const layout = (props.Layout?.select?.name || 'standard').toLowerCase()
 
-    // Fetch page blocks (content)
-    const blocksResponse = await notion.blocks.children.list({
-      block_id: matchedPage.id,
-    })
+    // Fetch all page blocks (handles Notion's 100-block pagination limit)
+    const allBlocks = await fetchAllBlocks(matchedPage.id)
 
     // Build the post object
     const post: BlogPost = {
@@ -81,10 +79,10 @@ export default defineEventHandler(async (event): Promise<BlogPost> => {
 
     if (layout === 'story') {
       // Section-based transform for scrollytelling
-      post.sections = await transformBlocksToSections(blocksResponse.results)
+      post.sections = await transformBlocksToSections(allBlocks)
     } else {
       // Standard HTML transform
-      let content = await transformBlocksToHtml(blocksResponse.results)
+      let content = await transformBlocksToHtml(allBlocks)
       content = groupListItems(content)
       post.content = content
     }
