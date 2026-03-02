@@ -101,3 +101,14 @@ blockquote {
   color: var(--color-text-muted);
   font-style: italic;
 }
+
+.notion-callout {
+  border-left: 4px solid currentColor;
+  padding-left: 1.25rem;
+  margin: 1.5rem 0;
+  background: transparent;
+}
+
+.notion-callout p {
+  font-style: italic;
+}
