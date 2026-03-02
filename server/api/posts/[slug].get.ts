@@ -62,8 +62,8 @@ export default defineEventHandler(async (event): Promise<BlogPost> => {
     const published = props.Published?.checkbox || false
     const layout = (props.Layout?.select?.name || 'standard').toLowerCase()
 
-    // Fetch all page blocks (handles Notion's 100-block pagination limit)
-    const allBlocks = await fetchAllBlocks(matchedPage.id)
+    // Fetch all page blocks with nested children (for callouts, quotes, etc.)
+    const allBlocks = await fetchBlocksWithChildren(matchedPage.id)
 
     // Build the post object
     const post: BlogPost = {

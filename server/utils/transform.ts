@@ -42,11 +42,11 @@ async function transformBlock(block: any): Promise<string> {
     case 'code':
       return transformCode(block)
     case 'quote':
-      return transformQuote(block)
+      return await transformQuote(block)
     case 'divider':
       return '<hr>'
     case 'callout':
-      return transformCallout(block)
+      return await transformCallout(block)
     case 'image':
       return await transformImage(block)
     case 'column_list':
@@ -116,19 +116,25 @@ function transformCode(block: any): string {
 /**
  * Transform quote block
  */
-function transformQuote(block: any): string {
+async function transformQuote(block: any): Promise<string> {
   const text = transformRichText(block.quote.rich_text)
-  return `<blockquote>${text}</blockquote>`
+  const childrenHtml = block.children?.length
+    ? await transformBlocksToHtml(block.children)
+    : ''
+  return `<blockquote>${text}${childrenHtml}</blockquote>`
 }
 
 /**
  * Transform callout block
  */
-function transformCallout(block: any): string {
+async function transformCallout(block: any): Promise<string> {
   const icon = block.callout.icon?.emoji || '💡'
   const text = transformRichText(block.callout.rich_text)
   const color = block.callout.color || 'default'
-  return `<div class="callout callout-${color}"><span class="callout-icon">${icon}</span><div class="callout-text">${text}</div></div>`
+  const childrenHtml = block.children?.length
+    ? await transformBlocksToHtml(block.children)
+    : ''
+  return `<div class="callout callout-${color}"><span class="callout-icon">${icon}</span><div class="callout-text">${text}${childrenHtml}</div></div>`
 }
 
 /**

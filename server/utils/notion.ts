@@ -47,6 +47,20 @@ export async function fetchAllBlocks(blockId: string): Promise<any[]> {
 }
 
 /**
+ * Fetch all blocks for a page/block, recursively attaching children
+ * for any block with has_children=true.
+ */
+export async function fetchBlocksWithChildren(blockId: string): Promise<any[]> {
+  const blocks = await fetchAllBlocks(blockId)
+  for (const block of blocks) {
+    if (block.has_children) {
+      block.children = await fetchBlocksWithChildren(block.id)
+    }
+  }
+  return blocks
+}
+
+/**
  * Get the configured Notion database ID
  */
 export function getNotionDatabaseId(): string {
