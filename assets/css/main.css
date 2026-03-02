@@ -138,3 +138,18 @@ blockquote {
 .callout-text {
   margin-left: 0 !important;
 }
+
+/* Make Notion code blocks look like your quote callout */
+pre, code {
+  font-family: inherit; /* optional, keeps your site font */
+}
+
+pre {
+  white-space: pre-wrap;
+  margin: 1.25rem 0;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  border-left: 4px solid currentColor;
+  background: rgba(255,255,255,0.06);
+  font-style: italic;
+}
