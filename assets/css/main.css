@@ -112,3 +112,15 @@ blockquote {
 .notion-callout p {
   font-style: italic;
 }
+
+/* hide the callout icon column */
+.notion-callout [class*="icon"],
+.notion-callout__icon,
+.notion-callout-icon {
+  display: none !important;
+}
+
+/* tighten spacing since the icon column is gone */
+.notion-callout {
+  padding-left: 1.25rem;
+}
