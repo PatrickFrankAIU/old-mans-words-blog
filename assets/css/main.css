@@ -124,3 +124,17 @@ blockquote {
 .notion-callout {
   padding-left: 1.25rem;
 }
+
+/* Hide Notion callout icon (the lightbulb) */
+.callout-icon {
+  display: none !important;
+}
+
+/* Tighten callout layout after icon is removed */
+.callout {
+  padding-left: 1rem;      /* optional, tune to taste */
+}
+
+.callout-text {
+  margin-left: 0 !important;
+}
