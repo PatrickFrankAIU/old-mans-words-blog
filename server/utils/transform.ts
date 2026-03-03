@@ -183,6 +183,7 @@ async function transformImage(block: any): Promise<string> {
 
   // Download image and get local path
   const localPath = await downloadImage(imageUrl)
+  if (!localPath) return ''
 
   // Get caption if it exists
   const caption = image.caption?.length
@@ -209,28 +210,22 @@ async function transformImage(block: any): Promise<string> {
 
 /**
  * Download image from Notion to public/images/blog/
- * Returns the public URL path to the downloaded image
+ * Returns the local public path, or null if the download fails.
+ *
+ * Notion file URLs are time-limited AWS S3 signed URLs that expire within the
+ * hour. Returning the raw URL to the client on failure would expose expiring
+ * credentials and bypass image optimisation — callers must treat null as "no
+ * image available" and never forward a Notion URL to the browser.
  */
-async function downloadImage(url: string): Promise<string> {
-  // Generate hash-based filename
-  const hash = createHash('md5').update(url).digest('hex')
+async function downloadImage(url: string): Promise<string | null> {
   const ext = url.split('.').pop()?.split('?')[0] || 'jpg'
-  const filename = `${hash}.${ext}`
-
   const publicDir = join(process.cwd(), 'public', 'images', 'blog')
-  const filePath = join(publicDir, filename)
-  const publicPath = `/images/blog/${filename}`
-
-  // If file already exists, skip download
-  if (existsSync(filePath)) {
-    return publicPath
-  }
 
   try {
     // Ensure directory exists
     await mkdir(publicDir, { recursive: true })
 
-    // Download image
+    // Fetch image content first — we need the buffer to compute a stable hash.
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(`Failed to download image: ${response.statusText}`)
@@ -239,15 +234,25 @@ async function downloadImage(url: string): Promise<string> {
     const arrayBuffer = await response.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Write to disk
-    await writeFile(filePath, buffer)
+    // Hash the image content, not the signed URL. The same Notion image
+    // produces a different signed URL on every API call, so URL-based hashes
+    // create a new file on every server start. Content hashes are stable —
+    // the same binary always maps to the same filename.
+    const hash = createHash('md5').update(buffer).digest('hex')
+    const filename = `${hash}.${ext}`
+    const filePath = join(publicDir, filename)
+    const publicPath = `/images/blog/${filename}`
 
-    console.log(`Downloaded image: ${filename}`)
+    // Skip write if this exact content is already on disk
+    if (!existsSync(filePath)) {
+      await writeFile(filePath, buffer)
+      console.log(`Downloaded image: ${filename}`)
+    }
+
     return publicPath
   } catch (error) {
     console.error('Error downloading image:', error)
-    // Return original URL as fallback
-    return url
+    return null
   }
 }
 
@@ -270,7 +275,9 @@ export async function extractFirstImageUrl(blocks: any[]): Promise<string | null
       continue
     }
 
-    return await downloadImage(imageUrl)
+    const localPath = await downloadImage(imageUrl)
+    if (localPath) return localPath
+    // Download failed — try the next image block rather than giving up
   }
 
   return null
@@ -411,6 +418,8 @@ async function extractImageInfo(block: any): Promise<{ src: string; alt: string 
   }
 
   const src = await downloadImage(imageUrl)
+  if (!src) return null
+
   const alt = image.caption?.map((rt: any) => rt.plain_text).join('') || ''
 
   return { src, alt }
