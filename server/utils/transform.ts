@@ -1,7 +1,3 @@
-import { createHash } from 'crypto'
-import { writeFile, mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
-import { join } from 'path'
 import type { ContentSection } from '~/types/blog'
 
 /**
@@ -48,7 +44,7 @@ async function transformBlock(block: any): Promise<string> {
     case 'callout':
       return await transformCallout(block)
     case 'image':
-      return await transformImage(block)
+      return transformImage(block)
     case 'column_list':
       return await transformColumnList(block)
     case 'column':
@@ -163,15 +159,15 @@ async function transformColumn(block: any): Promise<string> {
 }
 
 /**
- * Transform image block
- * Downloads the image and returns HTML with local path
+ * Transform image block.
+ * Uses the Notion URL directly — no local download — so images render on
+ * production without a writable filesystem (e.g. Vercel serverless).
  * Supports layout hints via captions: "full-bleed", "wide"
  */
-async function transformImage(block: any): Promise<string> {
+function transformImage(block: any): string {
   const image = block.image
   let imageUrl: string
 
-  // Notion images can be external or file (uploaded to Notion)
   if (image.type === 'external') {
     imageUrl = image.external.url
   } else if (image.type === 'file') {
@@ -180,10 +176,6 @@ async function transformImage(block: any): Promise<string> {
     console.warn('Unknown image type:', image.type)
     return ''
   }
-
-  // Download image and get local path
-  const localPath = await downloadImage(imageUrl)
-  if (!localPath) return ''
 
   // Get caption if it exists
   const caption = image.caption?.length
@@ -194,139 +186,32 @@ async function transformImage(block: any): Promise<string> {
   const captionText = image.caption?.map((rt: any) => rt.plain_text).join('').toLowerCase() || ''
 
   if (captionText.includes('full-bleed') || captionText.includes('fullbleed')) {
-    return `<div class="full-bleed-image"><img src="${localPath}" alt="${caption}" loading="lazy" /></div>`
+    return `<div class="full-bleed-image"><img src="${imageUrl}" alt="${caption}" loading="lazy" /></div>`
   }
 
   if (captionText.includes('wide')) {
-    return `<div class="wide-image"><img src="${localPath}" alt="${caption}" loading="lazy" /></div>`
+    return `<div class="wide-image"><img src="${imageUrl}" alt="${caption}" loading="lazy" /></div>`
   }
 
   if (caption) {
-    return `<figure><img src="${localPath}" alt="${caption}" loading="lazy" /><figcaption>${caption}</figcaption></figure>`
+    return `<figure><img src="${imageUrl}" alt="${caption}" loading="lazy" /><figcaption>${caption}</figcaption></figure>`
   }
 
-  return `<img src="${localPath}" alt="" loading="lazy" />`
+  return `<img src="${imageUrl}" alt="" loading="lazy" />`
 }
 
-/**
- * Parse the expiry information from an AWS S3 signed URL.
- * Returns null fields for non-signed URLs (e.g. external images).
- */
-function parseAmzExpiry(url: string): { secondsRemaining: number | null; isExpired: boolean } {
-  try {
-    const u = new URL(url)
-    const amzDate = u.searchParams.get('X-Amz-Date')     // e.g. '20241201T123456Z'
-    const amzExpires = u.searchParams.get('X-Amz-Expires') // e.g. '3600'
-    if (!amzDate || !amzExpires) return { secondsRemaining: null, isExpired: false }
-
-    // X-Amz-Date is YYYYMMDDTHHMMSSZ — convert to ISO 8601 for Date.parse
-    const iso = `${amzDate.slice(0, 4)}-${amzDate.slice(4, 6)}-${amzDate.slice(6, 8)}` +
-                `T${amzDate.slice(9, 11)}:${amzDate.slice(11, 13)}:${amzDate.slice(13, 15)}Z`
-    const expiresAt = new Date(Date.parse(iso) + parseInt(amzExpires) * 1000)
-    const secondsRemaining = Math.round((expiresAt.getTime() - Date.now()) / 1000)
-    return { secondsRemaining, isExpired: secondsRemaining < 0 }
-  } catch {
-    return { secondsRemaining: null, isExpired: false }
-  }
-}
 
 /**
- * Download image from Notion to public/images/blog/
- * Returns the local public path, or null if the download fails.
- *
- * Notion file URLs are time-limited AWS S3 signed URLs that expire within the
- * hour. Returning the raw URL to the client on failure would expose expiring
- * credentials and bypass image optimisation — callers must treat null as "no
- * image available" and never forward a Notion URL to the browser.
+ * Extract the first image URL from a list of Notion blocks.
+ * Returns the raw Notion URL (signed S3 or external) — no local download.
  */
-async function downloadImage(url: string): Promise<string | null> {
-  const ext = url.split('.').pop()?.split('?')[0] || 'jpg'
-  const publicDir = join(process.cwd(), 'public', 'images', 'blog')
-
-  // Diagnostic: log signed-URL expiry before touching the network
-  const { secondsRemaining, isExpired } = parseAmzExpiry(url)
-  if (secondsRemaining !== null) {
-    if (isExpired) {
-      console.error(`[downloadImage] URL already expired ${Math.abs(secondsRemaining)}s ago — fetch will fail`)
-    } else {
-      console.log(`[downloadImage] URL valid for ${secondsRemaining}s`)
-    }
-  }
-
-  try {
-    // Ensure directory exists
-    await mkdir(publicDir, { recursive: true })
-
-    // redirect:'follow' is the Node fetch default; stated explicitly so it is
-    // visible in logs and easy to change during diagnosis.
-    const response = await fetch(url, { redirect: 'follow' })
-
-    // Diagnostic: always log status; on failure also log headers and body
-    const redirected = response.url !== url
-    console.log(
-      `[downloadImage] ${response.status} ${response.statusText}` +
-      (redirected ? ` (redirected → ${response.url})` : '') +
-      ` | Content-Type: ${response.headers.get('content-type')}` +
-      ` | Content-Length: ${response.headers.get('content-length')}`
-    )
-
-    if (!response.ok) {
-      const body = await response.text()
-      throw new Error(
-        `HTTP ${response.status} ${response.statusText}: ${body.slice(0, 300)}`
-      )
-    }
-
-    const arrayBuffer = await response.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-
-    // Hash the image content, not the signed URL. The same Notion image
-    // produces a different signed URL on every API call, so URL-based hashes
-    // create a new file on every server start. Content hashes are stable —
-    // the same binary always maps to the same filename.
-    const hash = createHash('md5').update(buffer).digest('hex')
-    const filename = `${hash}.${ext}`
-    const filePath = join(publicDir, filename)
-    const publicPath = `/images/blog/${filename}`
-
-    // Skip write if this exact content is already on disk
-    if (!existsSync(filePath)) {
-      await writeFile(filePath, buffer)
-      console.log(`[downloadImage] Saved: ${filename}`)
-    } else {
-      console.log(`[downloadImage] Already on disk: ${filename}`)
-    }
-
-    return publicPath
-  } catch (error) {
-    const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
-    console.error(`[downloadImage] Failed — ${detail}`)
-    return null
-  }
-}
-
-/**
- * Extract the first image from a list of Notion blocks.
- * Downloads it via downloadImage() and returns the local path, or null if no images found.
- */
-export async function extractFirstImageUrl(blocks: any[]): Promise<string | null> {
+export function extractFirstImageUrl(blocks: any[]): string | null {
   for (const block of blocks) {
     if (block.type !== 'image') continue
 
     const image = block.image
-    let imageUrl: string
-
-    if (image.type === 'external') {
-      imageUrl = image.external.url
-    } else if (image.type === 'file') {
-      imageUrl = image.file.url
-    } else {
-      continue
-    }
-
-    const localPath = await downloadImage(imageUrl)
-    if (localPath) return localPath
-    // Download failed — try the next image block rather than giving up
+    if (image.type === 'external') return image.external.url
+    if (image.type === 'file') return image.file.url
   }
 
   return null
@@ -428,7 +313,7 @@ export async function transformBlocksToSections(blocks: any[]): Promise<ContentS
       flushText()
 
       // Extract image info and emit a parallax section
-      const info = await extractImageInfo(block)
+      const info = extractImageInfo(block)
       if (info) {
         sections.push({
           type: 'parallax',
@@ -452,9 +337,10 @@ export async function transformBlocksToSections(blocks: any[]): Promise<ContentS
 }
 
 /**
- * Extract image source and alt from an image block (downloads the image).
+ * Extract image source and alt from an image block.
+ * Returns the raw Notion URL — no local download.
  */
-async function extractImageInfo(block: any): Promise<{ src: string; alt: string } | null> {
+function extractImageInfo(block: any): { src: string; alt: string } | null {
   const image = block.image
   let imageUrl: string
 
@@ -466,10 +352,6 @@ async function extractImageInfo(block: any): Promise<{ src: string; alt: string 
     return null
   }
 
-  const src = await downloadImage(imageUrl)
-  if (!src) return null
-
   const alt = image.caption?.map((rt: any) => rt.plain_text).join('') || ''
-
-  return { src, alt }
+  return { src: imageUrl, alt }
 }

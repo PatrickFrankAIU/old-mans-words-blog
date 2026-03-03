@@ -10,10 +10,12 @@ export default defineNuxtConfig({
   modules: ['@nuxt/image'],
 
   image: {
-    // All images served from /images/blog/ (local — downloaded at build time from Notion)
-    // No external domains needed.
     quality: 80,
     format: ['webp'],
+    // Allow NuxtImg/IPX to proxy and optimise Notion-hosted images.
+    // Notion stores uploads on S3; external image blocks may use any domain,
+    // so the plain <img> fallback in PostCard handles unwhitelisted sources.
+    domains: ['prod-files-secure.s3.us-west-2.amazonaws.com'],
   },
 
   // Runtime config for environment variables

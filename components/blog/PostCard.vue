@@ -5,6 +5,10 @@ defineProps<{
   post: BlogPost
 }>()
 
+// Falls back to a plain <img> if NuxtImg/IPX cannot optimise the source
+// (e.g. unwhitelisted external domain or transient IPX error).
+const imageError = ref(false)
+
 /**
  * Format date for display
  */
@@ -23,7 +27,14 @@ function formatDate(dateString: string): string {
   <article :class="['post-card', { 'has-hero': post.cardImage }]">
     <NuxtLink :to="post.layout === 'story' ? `/story/${post.slug}` : `/blog/${post.slug}`" class="post-card-link">
       <div v-if="post.cardImage" class="post-card-hero">
+        <img
+          v-if="imageError"
+          :src="post.cardImage"
+          :alt="post.title"
+          loading="lazy"
+        />
         <NuxtImg
+          v-else
           :src="post.cardImage"
           :alt="post.title"
           loading="lazy"
@@ -32,6 +43,7 @@ function formatDate(dateString: string): string {
           format="webp"
           quality="80"
           sizes="(max-width: 768px) 100vw, 400px"
+          @error="imageError = true"
         />
         <h2 class="post-card-hero-title">{{ post.title }}</h2>
       </div>

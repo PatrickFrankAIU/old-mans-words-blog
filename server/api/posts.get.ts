@@ -72,7 +72,7 @@ export default defineEventHandler(async (event): Promise<BlogPost[]> => {
       posts.map(async (post) => {
         try {
           const allBlocks = await fetchAllBlocks(post.id)
-          const cardImage = await extractFirstImageUrl(allBlocks)
+          const cardImage = extractFirstImageUrl(allBlocks)
           return { ...post, ...(cardImage && { cardImage }) }
         } catch (error) {
           console.warn(`Failed to fetch card image for "${post.title}":`, error)
