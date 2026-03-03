@@ -7,6 +7,15 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
+  modules: ['@nuxt/image'],
+
+  image: {
+    // All images served from /images/blog/ (local — downloaded at build time from Notion)
+    // No external domains needed.
+    quality: 80,
+    format: ['webp'],
+  },
+
   // Runtime config for environment variables
   runtimeConfig: {
     // Server-only env vars (never exposed to client)

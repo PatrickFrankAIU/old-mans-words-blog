@@ -23,7 +23,16 @@ function formatDate(dateString: string): string {
   <article :class="['post-card', { 'has-hero': post.cardImage }]">
     <NuxtLink :to="post.layout === 'story' ? `/story/${post.slug}` : `/blog/${post.slug}`" class="post-card-link">
       <div v-if="post.cardImage" class="post-card-hero">
-        <img :src="post.cardImage" :alt="post.title" loading="lazy" />
+        <NuxtImg
+          :src="post.cardImage"
+          :alt="post.title"
+          loading="lazy"
+          width="640"
+          height="150"
+          format="webp"
+          quality="80"
+          sizes="(max-width: 768px) 100vw, 400px"
+        />
         <h2 class="post-card-hero-title">{{ post.title }}</h2>
       </div>
 

@@ -35,7 +35,15 @@ useHead({
   <div class="posts-page">
     <!-- Hero -->
     <header class="hero">
-      <img src="/images/oldmanlogo.png" alt="Old Man's Words" class="hero-logo" />
+      <NuxtImg
+        src="/images/oldmanlogo.png"
+        alt="Old Man's Words"
+        class="hero-logo"
+        width="300"
+        height="200"
+        format="webp"
+        quality="80"
+      />
       <h1 class="hero-title">Old Man's Words</h1>
       <p class="hero-subtitle">Thoughts, stories, and ideas</p>
     </header>

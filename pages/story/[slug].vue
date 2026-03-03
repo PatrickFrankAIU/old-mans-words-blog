@@ -8,6 +8,7 @@ const slug = route.params.slug as string
 const config = useRuntimeConfig()
 
 const { fetchPost } = usePosts()
+const img = useImage()
 
 const { data: post, error, pending } = await useAsyncData<BlogPost>(
   `story-${slug}`,
@@ -109,7 +110,7 @@ onMounted(() => {
         <div
           v-if="section.type === 'parallax'"
           class="story-parallax"
-          :style="{ backgroundImage: `url(${section.imageSrc})` }"
+          :style="{ backgroundImage: `url(${img(section.imageSrc || '', { format: 'webp', quality: 80, width: 1920 })})` }"
           role="img"
           :aria-label="section.imageAlt || 'Story image'"
         >
