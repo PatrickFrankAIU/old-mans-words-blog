@@ -209,6 +209,28 @@ async function transformImage(block: any): Promise<string> {
 }
 
 /**
+ * Parse the expiry information from an AWS S3 signed URL.
+ * Returns null fields for non-signed URLs (e.g. external images).
+ */
+function parseAmzExpiry(url: string): { secondsRemaining: number | null; isExpired: boolean } {
+  try {
+    const u = new URL(url)
+    const amzDate = u.searchParams.get('X-Amz-Date')     // e.g. '20241201T123456Z'
+    const amzExpires = u.searchParams.get('X-Amz-Expires') // e.g. '3600'
+    if (!amzDate || !amzExpires) return { secondsRemaining: null, isExpired: false }
+
+    // X-Amz-Date is YYYYMMDDTHHMMSSZ — convert to ISO 8601 for Date.parse
+    const iso = `${amzDate.slice(0, 4)}-${amzDate.slice(4, 6)}-${amzDate.slice(6, 8)}` +
+                `T${amzDate.slice(9, 11)}:${amzDate.slice(11, 13)}:${amzDate.slice(13, 15)}Z`
+    const expiresAt = new Date(Date.parse(iso) + parseInt(amzExpires) * 1000)
+    const secondsRemaining = Math.round((expiresAt.getTime() - Date.now()) / 1000)
+    return { secondsRemaining, isExpired: secondsRemaining < 0 }
+  } catch {
+    return { secondsRemaining: null, isExpired: false }
+  }
+}
+
+/**
  * Download image from Notion to public/images/blog/
  * Returns the local public path, or null if the download fails.
  *
@@ -221,14 +243,38 @@ async function downloadImage(url: string): Promise<string | null> {
   const ext = url.split('.').pop()?.split('?')[0] || 'jpg'
   const publicDir = join(process.cwd(), 'public', 'images', 'blog')
 
+  // Diagnostic: log signed-URL expiry before touching the network
+  const { secondsRemaining, isExpired } = parseAmzExpiry(url)
+  if (secondsRemaining !== null) {
+    if (isExpired) {
+      console.error(`[downloadImage] URL already expired ${Math.abs(secondsRemaining)}s ago — fetch will fail`)
+    } else {
+      console.log(`[downloadImage] URL valid for ${secondsRemaining}s`)
+    }
+  }
+
   try {
     // Ensure directory exists
     await mkdir(publicDir, { recursive: true })
 
-    // Fetch image content first — we need the buffer to compute a stable hash.
-    const response = await fetch(url)
+    // redirect:'follow' is the Node fetch default; stated explicitly so it is
+    // visible in logs and easy to change during diagnosis.
+    const response = await fetch(url, { redirect: 'follow' })
+
+    // Diagnostic: always log status; on failure also log headers and body
+    const redirected = response.url !== url
+    console.log(
+      `[downloadImage] ${response.status} ${response.statusText}` +
+      (redirected ? ` (redirected → ${response.url})` : '') +
+      ` | Content-Type: ${response.headers.get('content-type')}` +
+      ` | Content-Length: ${response.headers.get('content-length')}`
+    )
+
     if (!response.ok) {
-      throw new Error(`Failed to download image: ${response.statusText}`)
+      const body = await response.text()
+      throw new Error(
+        `HTTP ${response.status} ${response.statusText}: ${body.slice(0, 300)}`
+      )
     }
 
     const arrayBuffer = await response.arrayBuffer()
@@ -246,12 +292,15 @@ async function downloadImage(url: string): Promise<string | null> {
     // Skip write if this exact content is already on disk
     if (!existsSync(filePath)) {
       await writeFile(filePath, buffer)
-      console.log(`Downloaded image: ${filename}`)
+      console.log(`[downloadImage] Saved: ${filename}`)
+    } else {
+      console.log(`[downloadImage] Already on disk: ${filename}`)
     }
 
     return publicPath
   } catch (error) {
-    console.error('Error downloading image:', error)
+    const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+    console.error(`[downloadImage] Failed — ${detail}`)
     return null
   }
 }
