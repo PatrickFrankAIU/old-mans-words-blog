@@ -4,7 +4,7 @@ import type { BlogPost, NotionPageProperties } from '~/types/blog'
  * GET /api/posts/:slug
  * Returns a single blog post by slug, including content blocks
  */
-export default defineEventHandler(async (event): Promise<BlogPost> => {
+export default defineCachedEventHandler(async (event): Promise<BlogPost> => {
   const notion = getNotionClient()
   const databaseId = getNotionDatabaseId()
   const slug = getRouterParam(event, 'slug')
@@ -105,4 +105,9 @@ export default defineEventHandler(async (event): Promise<BlogPost> => {
       },
     })
   }
+}, {
+  maxAge: 300,
+  staleMaxAge: -1,
+  name: 'post-slug',
+  getKey: (event) => getRouterParam(event, 'slug') ?? 'unknown',
 })

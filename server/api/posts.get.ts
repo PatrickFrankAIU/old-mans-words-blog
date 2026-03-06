@@ -5,7 +5,7 @@ import { extractFirstImageUrl } from '~/server/utils/transform'
  * GET /api/posts
  * Returns a list of all published blog posts
  */
-export default defineEventHandler(async (event): Promise<BlogPost[]> => {
+export default defineCachedEventHandler(async (event): Promise<BlogPost[]> => {
   const notion = getNotionClient()
   const databaseId = getNotionDatabaseId()
 
@@ -94,4 +94,9 @@ export default defineEventHandler(async (event): Promise<BlogPost[]> => {
       },
     })
   }
+}, {
+  maxAge: 60,
+  staleMaxAge: -1,
+  name: 'posts-list',
+  getKey: () => 'all',
 })
