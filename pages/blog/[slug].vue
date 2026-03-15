@@ -13,6 +13,10 @@ const { data: post, error, pending } = await useAsyncData<BlogPost>(
   () => fetchPost(slug)
 )
 
+// JSON-LD: BlogPosting + BreadcrumbList
+const postUrl = post.value ? `${config.public.siteUrl}/blog/${post.value.slug}` : ''
+useBlogPostStructuredData(post, postUrl, config.public.siteUrl)
+
 // SEO meta tags
 useHead(() => {
   if (!post.value) return {}

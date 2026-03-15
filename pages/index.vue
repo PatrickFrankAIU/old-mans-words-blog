@@ -10,6 +10,23 @@ const { data: posts, error, pending } = await useAsyncData<BlogPost[]>(
   () => fetchPosts()
 )
 
+// JSON-LD: WebSite schema
+useHead({
+  script: [
+    {
+      key: 'ld-website',
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: "Old Man's Words",
+        url: config.public.siteUrl,
+        inLanguage: 'en-US',
+      }),
+    },
+  ],
+})
+
 // SEO meta tags
 useHead({
   title: "Old Man's Words",
