@@ -60,6 +60,7 @@ useHead({
         height="200"
         format="webp"
         quality="80"
+        fetchpriority="high"
       />
       <h1 class="hero-title">Old Man's Words</h1>
       <p class="hero-subtitle">Thoughts, stories, and ideas</p>

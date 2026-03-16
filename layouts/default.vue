@@ -1,8 +1,3 @@
-<script setup lang="ts">
-const config = useRuntimeConfig()
-const siteUrl = config.public.siteUrl
-</script>
-
 <template>
   <div class="layout">
     <header class="site-header">

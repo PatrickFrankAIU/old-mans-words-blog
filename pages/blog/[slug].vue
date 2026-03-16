@@ -116,7 +116,7 @@ function formatDate(dateString: string): string {
         <p>This post has no content yet.</p>
       </div>
 
-      <BlogPostFooter
+      <LazyBlogPostFooter
         v-if="allPosts"
         :current-post="post"
         :all-posts="allPosts"

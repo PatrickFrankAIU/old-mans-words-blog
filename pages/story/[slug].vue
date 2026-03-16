@@ -133,7 +133,7 @@ onMounted(() => {
         />
       </template>
 
-      <BlogPostFooter
+      <LazyBlogPostFooter
         v-if="allPosts"
         :current-post="post"
         :all-posts="allPosts"
