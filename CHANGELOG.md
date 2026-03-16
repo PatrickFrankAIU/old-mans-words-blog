@@ -53,6 +53,15 @@
 - Added `ContentSection` interface and `layout` field to `BlogPost` type.
 - Updated `posts/[slug].get.ts` to return sections array for story layout posts.
 
+## 2026-03-16 — Post Footer with Related Post Recommendations
+
+- Added `components/blog/PostFooter.vue` — reusable component that appears at the end of every article, above the existing boilerplate sign-off.
+- Suggests 1–2 related posts based on tag overlap (overlap count > 0, sorted descending). Falls back to most recent post of that type if no tag match exists.
+- Essays recommend 1 related essay + 1 related story. Stories recommend 1 related story + 1 essay.
+- Compact horizontal card design (thumbnail left, text right): type label, title, and description. Cards stack vertically on mobile and display side-by-side on desktop (≥ 600px).
+- Both `pages/blog/[slug].vue` and `pages/story/[slug].vue` updated to fetch the full post list via the existing cached `/api/posts` route and pass it to the component.
+- No new dependencies or API routes introduced.
+
 ## 2026-02-10 — Phase 4: Pages & UI Complete
 
 - Created `composables/usePosts.ts` for fetching posts from API routes.

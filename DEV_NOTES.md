@@ -89,6 +89,32 @@ Running log of architectural decisions, tradeoffs, and future considerations.
 
 ---
 
+## 2026-03-16 — Post Footer / Related Posts
+
+### Decision: Client-side recommendation logic in a computed(), not a new API route
+
+**Context**: Each article page needed 1–2 related post suggestions. Options were: (a) a new `/api/posts/related/:slug` server route with server-side logic, (b) extending the single-post API to embed recommendations, or (c) fetching the existing post list in the page and filtering client-side.
+
+**Chosen**: Option (c) — fetch `/api/posts` in the article page, pass the full list as a prop to `PostFooter.vue`, compute recommendations in a `computed()`.
+
+**Rationale**: The post list route is already cached (`defineCachedEventHandler`). At build time (SSG) the cost is negligible — a single cached call shared across the page render. No new server code is needed, the logic is co-located with the component that uses it, and the `computed()` approach is idiomatic Vue. Adding a dedicated API route would be over-engineering for a small blog with a simple dataset.
+
+**Revisit if**: The post count grows large enough that shipping the full list on every article page meaningfully inflates page weight, or recommendation logic becomes complex enough to warrant server-side personalization.
+
+---
+
+### Decision: Tag overlap as the recommendation signal (v1)
+
+**Context**: Need a relevance signal for "related posts." Options include tag overlap, manual curated relations (Notion relation property), recency, or view-based popularity.
+
+**Chosen**: Tag overlap (count of shared tags > 0), sorted by overlap count descending then date descending. Falls back to most recent post of the target type when no tag overlap exists.
+
+**Rationale**: Tags already exist in the Notion schema and are extracted by the API. This requires zero new Notion configuration, is deterministic, and is transparent to the author — adding tags to a post automatically improves its recommendation coverage. The fallback-to-recency ensures the component always has something to show even on untagged posts.
+
+**Deferred**: A `Series` select property for grouping sequential stories was considered but deferred — no current content requires it. Can be added to Notion and the type/API without touching `PostFooter.vue` logic (just extend `bestMatch()`).
+
+---
+
 ## Implementation Plan
 
 The project is built in six sequential phases, each with clear deliverables and dependencies.
