@@ -7,7 +7,7 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
-  modules: ['@nuxt/image'],
+  modules: ['@nuxt/image', '@vercel/speed-insights/nuxt'],
 
   image: {
     quality: 80,

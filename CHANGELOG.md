@@ -53,6 +53,12 @@
 - Added `ContentSection` interface and `layout` field to `BlogPost` type.
 - Updated `posts/[slug].get.ts` to return sections array for story layout posts.
 
+## 2026-03-16 — Vercel Speed Insights
+
+- Added `@vercel/speed-insights` for Core Web Vitals reporting in the Vercel dashboard.
+- Registered `@vercel/speed-insights/nuxt` as a Nuxt module in `nuxt.config.ts` — automatically injects a client-only plugin on every page.
+- No new environment variables required; the package is a no-op outside Vercel deployments.
+
 ## 2026-03-16 — Post Footer with Related Post Recommendations
 
 - Added `components/blog/PostFooter.vue` — reusable component that appears at the end of every article, above the existing boilerplate sign-off.
