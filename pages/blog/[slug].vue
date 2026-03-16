@@ -5,13 +5,16 @@ const route = useRoute()
 const slug = route.params.slug as string
 const config = useRuntimeConfig()
 
-const { fetchPost } = usePosts()
+const { fetchPost, fetchPosts } = usePosts()
 
 // Fetch post on page load
 const { data: post, error, pending } = await useAsyncData<BlogPost>(
   `post-${slug}`,
   () => fetchPost(slug)
 )
+
+// Fetch all posts for recommendations (cached; negligible build-time cost)
+const { data: allPosts } = await useAsyncData<BlogPost[]>('posts', () => fetchPosts())
 
 // JSON-LD: BlogPosting + BreadcrumbList
 const postUrl = post.value ? `${config.public.siteUrl}/blog/${post.value.slug}` : ''
@@ -112,6 +115,12 @@ function formatDate(dateString: string): string {
       <div v-else class="post-no-content">
         <p>This post has no content yet.</p>
       </div>
+
+      <BlogPostFooter
+        v-if="allPosts"
+        :current-post="post"
+        :all-posts="allPosts"
+      />
 
       <footer class="post-footer">
         <div class="post-boilerplate">

@@ -7,13 +7,16 @@ const route = useRoute()
 const slug = route.params.slug as string
 const config = useRuntimeConfig()
 
-const { fetchPost } = usePosts()
+const { fetchPost, fetchPosts } = usePosts()
 const img = useImage()
 
 const { data: post, error, pending } = await useAsyncData<BlogPost>(
   `story-${slug}`,
   () => fetchPost(slug)
 )
+
+// Fetch all posts for recommendations (cached; negligible build-time cost)
+const { data: allPosts } = await useAsyncData<BlogPost[]>('posts', () => fetchPosts())
 
 // JSON-LD: BlogPosting + BreadcrumbList
 const postUrl = post.value ? `${config.public.siteUrl}/story/${post.value.slug}` : ''
@@ -129,6 +132,12 @@ onMounted(() => {
           v-html="section.html"
         />
       </template>
+
+      <BlogPostFooter
+        v-if="allPosts"
+        :current-post="post"
+        :all-posts="allPosts"
+      />
 
       <!-- Footer -->
       <footer class="story-footer">
