@@ -78,3 +78,7 @@
 - Added responsive CSS styling for post list and post detail layouts.
 - Implemented proper date formatting, tag display, and typography styles.
 - Tested complete flow: homepage → post list → individual post - all working correctly.
+
+## 2026-03-20 — CSS Fix: blockquote em white-space
+
+- Added `blockquote em { white-space: pre-line; }` to `assets/css/main.css` so line breaks inside italic blockquote text are preserved.
