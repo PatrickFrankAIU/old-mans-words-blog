@@ -31,15 +31,15 @@ useHead({
 useHead({
   title: "Old Man's Words",
   meta: [
-    { name: 'description', content: 'Thoughts, stories, and ideas' },
+    { name: 'description', content: 'SF&F audiobook reviews and digressions from 50+ years of reading' },
     { property: 'og:title', content: "Old Man's Words" },
-    { property: 'og:description', content: 'Thoughts, stories, and ideas' },
+    { property: 'og:description', content: 'SF&F audiobook reviews and digressions from 50+ years of reading' },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: config.public.siteUrl },
     { property: 'og:image', content: `${config.public.siteUrl}/images/oldmanlogo.png` },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: "Old Man's Words" },
-    { name: 'twitter:description', content: 'Thoughts, stories, and ideas' },
+    { name: 'twitter:description', content: 'SF&F audiobook reviews and digressions from 50+ years of reading' },
     { name: 'twitter:image', content: `${config.public.siteUrl}/images/oldmanlogo.png` },
   ],
   link: [
@@ -63,7 +63,7 @@ useHead({
         fetchpriority="high"
       />
       <h1 class="hero-title">Old Man's Words</h1>
-      <p class="hero-subtitle">Thoughts, stories, and ideas</p>
+      <p class="hero-subtitle">SF&F audiobook reviews and digressions from 50+ years of reading</p>
     </header>
 
     <!-- Loading state -->
